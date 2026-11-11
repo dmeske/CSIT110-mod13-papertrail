@@ -1,0 +1,233 @@
+<title>The Paper Trail</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: a single planner page — week strip on top, two pencil meters, one decision card at a time */
+:root {
+  --bg: #eef2f6; --paper: #ffffff; --grid: #d8e1ea; --ink: #1b2a3a; --muted: #4c5b6b; --line: #8593a3;
+  --accent: #1f4e9a; --accent-ink: #ffffff; --pencil: #b3261e; --good: #1d6b3a; --warn: #8a5a00; --bad: #a3221b;
+  --goodbg: #e5f3ea; --warnbg: #fdf3dc; --badbg: #fbe7e5; --meterbg: #dfe6ee; --learn: #0b6b6a;
+  --display: "Bitter", Georgia, "Times New Roman", serif; --body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111821; --paper: #1a2430; --grid: #263342; --ink: #e8eef5; --muted: #b4c0cd; --line: #6f7f91;
+  --accent: #8fb4f2; --accent-ink: #0d1520; --pencil: #ff8a80; --good: #7fd49b; --warn: #f2c66d; --bad: #ff9a91;
+  --goodbg: #16301f; --warnbg: #33280f; --badbg: #3a1a18; --meterbg: #2a3746; --learn: #6fd0cc; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111821; --paper: #1a2430; --grid: #263342; --ink: #e8eef5; --muted: #b4c0cd; --line: #6f7f91;
+  --accent: #8fb4f2; --accent-ink: #0d1520; --pencil: #ff8a80; --good: #7fd49b; --warn: #f2c66d; --bad: #ff9a91;
+  --goodbg: #16301f; --warnbg: #33280f; --badbg: #3a1a18; --meterbg: #2a3746; --learn: #6fd0cc; color-scheme: dark }
+* { box-sizing: border-box; }
+.wrap > *, .grid > * { min-width: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.05rem; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 780px; margin: 0 auto; display: grid; gap: 18px; }
+header h1 { font-family: var(--display); font-size: clamp(1.7rem, 4vw, 2.3rem); margin: 0; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+.eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; font-weight: 700; color: var(--pencil); margin: 0 0 4px; }
+.page { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 20px;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px); background-size: 100% 28px; background-position: 0 14px; }
+.page > * { position: relative; }
+.policy { border: 2px dashed var(--line); border-radius: 8px; padding: 12px 14px; background: var(--paper); }
+.policy strong { font-family: var(--display); }
+.week { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.week li { flex: 1 1 90px; min-width: 0; text-align: center; padding: 6px 4px; border: 1px solid var(--line); border-radius: 6px; font-size: .85rem; color: var(--muted); background: var(--paper); }
+.week li.now { border: 2px solid var(--accent); color: var(--ink); font-weight: 700; }
+.week li.done { color: var(--ink); }
+.week li.done::before { content: "✓ "; color: var(--good); }
+.meters { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.meter { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.meter .row { display: flex; justify-content: space-between; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bar { height: 12px; background: var(--meterbg); border-radius: 6px; overflow: hidden; margin-top: 6px; }
+.bar span { display: block; height: 100%; width: 0; background: var(--pencil); transition: width .4s ease; }
+.bar.learn span { background: var(--learn); }
+h2 { font-family: var(--display); font-size: 1.35rem; margin: 0 0 8px; text-wrap: balance; }
+h2:focus, h3:focus { outline: 3px solid var(--accent); outline-offset: 4px; }
+.scene { margin: 0 0 14px; }
+.tag { display: inline-block; font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 1px 10px; margin-bottom: 8px; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
+legend { font-weight: 700; margin-bottom: 8px; }
+.opt { display: flex; gap: 12px; align-items: flex-start; min-height: 48px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); cursor: pointer; }
+.opt input { width: 22px; height: 22px; margin-top: 2px; flex: none; accent-color: var(--accent); }
+.opt:has(input:checked) { border: 2px solid var(--accent); }
+.opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+button { font: inherit; font-weight: 700; min-height: 48px; padding: 10px 20px; border-radius: 8px; border: 2px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+button.secondary { background: transparent; color: var(--accent); }
+button:disabled { background: transparent; color: var(--muted); border-color: var(--line); cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.feedback { border-radius: 8px; padding: 14px 16px; margin-top: 14px; border: 1px solid var(--line); }
+.feedback.good { background: var(--goodbg); } .feedback.mid { background: var(--warnbg); } .feedback.bad { background: var(--badbg); }
+.feedback h3 { margin: 0 0 6px; font-family: var(--display); font-size: 1.15rem; }
+.good .verdict { color: var(--good); } .mid .verdict { color: var(--warn); } .bad .verdict { color: var(--bad); }
+.deltas { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .95rem; margin: 6px 0 0; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+caption { text-align: left; font-weight: 700; padding: 4px 0 8px; }
+th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+thead th { background: var(--meterbg); }
+.big { font-family: var(--display); font-size: 2rem; margin: 4px 0; }
+.small { color: var(--muted); font-size: .92rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">CSIT 110 · Module 13 game</p>
+    <h1>The Paper Trail</h1>
+    <p>You’re Sam, a fictional student with a research paper due Friday. Make six choices across the week. The twist: the course AI policy is drawn at random, and the best move depends on what it says. Two meters track your <strong>academic integrity</strong> and how much you actually <strong>learn</strong>.</p>
+  </header>
+
+  <div class="policy" id="policyBox" aria-live="off"></div>
+
+  <ol class="week" id="week" aria-label="Your week"></ol>
+
+  <div class="meters" aria-hidden="false">
+    <div class="meter"><div class="row"><span>Integrity</span><span id="intText">0 / 12</span></div><div class="bar" aria-hidden="true"><span id="intBar"></span></div></div>
+    <div class="meter"><div class="row"><span>Learning</span><span id="lrnText">0 / 12</span></div><div class="bar learn" aria-hidden="true"><span id="lrnBar"></span></div></div>
+  </div>
+
+  <main class="page" id="stage"></main>
+  <p class="small" id="best"></p>
+  <div class="sr" aria-live="polite" id="live"></div>
+  <p class="small">The best possible score depends on the policy, because some good moves teach more than others. All people, courses, and situations here are fictional. The policy wording is modeled on common syllabus statements and Palomar College’s AP 5505.</p>
+</div>
+
+<script>
+(function () {
+  const POLICIES = {
+    A: { key: "A", name: "AI for planning and feedback, with disclosure", text: "You may use AI to brainstorm, narrow a topic, build search terms, and get feedback on your own draft. All writing in the paper must be yours. Include an AI use statement." },
+    B: { key: "B", name: "No AI", text: "Do not use AI tools on any part of this assignment, including brainstorming and editing. Use the library, the writing center, and tutoring instead." },
+    C: { key: "C", name: "AI encouraged, with citation", text: "You may use AI throughout, including drafting help, as long as you cite any AI-generated text you use, add an AI use statement, and verify every source." },
+  };
+  // Each option: per-policy [integrity 0–2, learning 0–2, feedback]
+  const DECISIONS = [
+    { day: "Mon", cat: "Check", title: "The assignment is posted", scene: "Your instructor posts the research paper prompt: 1,500 words on a topic of your choice related to technology and society.", q: "What’s your first move?",
+      opts: [
+        { t: "Open a chatbot and ask for paper topic ideas.", r: { A: [1, 1, "Allowed this time, but you didn’t check first. The policy could just as easily have said no."], B: [0, 0, "This course says no AI at all. Using it before checking the policy is unauthorized use, which AP 5505 treats as academic dishonesty."], C: [1, 1, "Allowed here, but you got lucky. Always check before you start."] } },
+        { t: "Search the syllabus and the assignment instructions for the AI policy.", r: { A: [2, 1, "Exactly right. Now you know what’s allowed and what you must disclose."], B: [2, 1, "Exactly right. You found the no-AI rule before it could cost you."], C: [2, 1, "Exactly right. You know you can use AI, and that you must cite and verify."] } },
+        { t: "Ask a friend in another section what’s allowed.", r: { A: [1, 0, "Rules can differ between sections and instructors. Check your own syllabus or ask your instructor."], B: [1, 0, "Rules can differ between sections. Your friend’s class might allow AI while yours doesn’t."], C: [1, 0, "Close, but your friend’s rules might not match yours. Go to the source."] } },
+      ] },
+    { day: "Tue", cat: "Keep", title: "Narrowing the topic", scene: "You picked “AI in hiring,” but it’s too broad for 1,500 words.", q: "How do you narrow it?",
+      opts: [
+        { t: "Ask AI: “Give me a strong thesis about AI in hiring.”", r: { A: [1, 0, "Brainstorming is allowed, but the thesis is the heart of your thinking. Let AI ask you questions instead of answering for you."], B: [0, 0, "This course doesn’t allow AI for any part of the paper."], C: [1, 0, "Allowed, but now the main idea isn’t yours. You’d learn more by narrowing it yourself."] } },
+        { t: "Ask AI to ask you three questions that would help you narrow the topic, without giving a thesis.", r: { A: [2, 2, "Great use of AI as a coach. You do the thinking; it asks the questions."], B: [0, 0, "Even coaching-style AI use breaks a no-AI policy. Try the library or writing center."], C: [2, 2, "Great use of AI as a coach. You do the thinking; it asks the questions."] } },
+        { t: "Brainstorm on paper, then meet with a librarian to find focused angles.", r: { A: [2, 2, "A strong choice. Librarians are experts at narrowing research topics."], B: [2, 2, "Exactly the kind of help a no-AI policy points you toward."], C: [2, 2, "A strong choice even when AI is allowed. Librarians are experts at narrowing topics."] } },
+      ] },
+    { day: "Wed", cat: "Verify", title: "A tempting source list", scene: "On a study website you find a list of five perfect-looking sources about AI hiring tools, with authors and years. It looks AI-generated.", q: "What do you do with the list?",
+      opts: [
+        { t: "Copy the list into your references. The details look complete.", r: { A: [0, 0, "Chatbot-style source lists often include made-up citations. In one study, 55% of GPT-3.5’s citations were fabricated."], B: [0, 0, "Fake or unread sources in a reference list are a serious integrity problem, whatever the AI policy."], C: [0, 0, "Even when AI is encouraged, you must verify every source. Unchecked lists often include fakes."] } },
+        { t: "Search each title in the library database, and keep only the ones you find and read.", r: { A: [2, 2, "Right. Find it, open it, check it. Only real sources you’ve read go in your paper."], B: [2, 2, "Right. Find it, open it, check it. Only real sources you’ve read go in your paper."], C: [2, 2, "Right. Find it, open it, check it. Only real sources you’ve read go in your paper."] } },
+        { t: "Ask a chatbot whether the sources are real.", r: { A: [1, 0, "A chatbot can’t confirm a source exists; it can be confidently wrong. Search a real database instead."], B: [0, 0, "This uses AI in a no-AI course, and a chatbot can’t verify sources anyway."], C: [1, 0, "AI is allowed, but it can’t confirm a source exists. Search a real database instead."] } },
+      ] },
+    { day: "Thu", cat: "Keep", title: "Stuck on the introduction", scene: "It’s Thursday night. You have notes and an outline, but the introduction won’t come.", q: "How do you get unstuck?",
+      opts: [
+        { t: "Ask AI to write the introduction, then edit it a little.", r: { A: [0, 0, "This policy says all writing must be yours. Lightly edited AI text crosses that line."], B: [0, 0, "No AI is allowed, and this would be AI-written text in your paper."], C: [1, 0, "Allowed if you cite the AI text, but you skipped the hardest learning in the assignment."] } },
+        { t: "Write a rough version, then ask AI to point out unclear sentences without rewriting them.", r: { A: [2, 2, "Exactly what this policy allows: feedback on your own draft, with you making the changes."], B: [0, 0, "Feedback from AI is still AI use. In this course, take your draft to the writing center."], C: [2, 2, "A great choice. The words stay yours and the feedback makes them stronger."] } },
+        { t: "Write a messy draft and book a writing center session for the morning.", r: { A: [2, 2, "A strong choice. Human feedback is always allowed and builds your skills."], B: [2, 2, "Exactly the right kind of help for a no-AI course."], C: [2, 1, "Solid, though AI feedback would also have been allowed here."] } },
+      ] },
+    { day: "Fri", cat: "Disclose", title: "Before you submit", scene: "The paper is done. The policy asks for transparency about AI.", q: "What do you add?",
+      opts: [
+        { t: "Nothing. You only used AI a little, so it doesn’t count.", r: { A: [0, 0, "The policy requires an AI use statement. “A little” still counts."], B: [1, 0, "If you truly used no AI, you’re within the rules, but saying so plainly removes any doubt."], C: [0, 0, "This policy requires a statement and citations. Skipping them hides your process."] } },
+        { t: "An AI use statement that names the tools, the exact tasks, and what you did yourself (or that you used none).", r: { A: [2, 1, "Specific and honest: tool, tasks, and your own work."], B: [2, 1, "Clear and honest. A short “I used no AI tools” statement protects you too."], C: [2, 1, "Specific and honest. Pair it with citations for any AI text you used."] } },
+        { t: "A one-line note: “AI was used.”", r: { A: [1, 0, "Better than nothing, but too vague. Which tool? For what?"], B: [0, 0, "In a no-AI course, this note would admit a policy violation without explaining it."], C: [1, 0, "Too vague. Name the tool, the tasks, and what you did yourself."] } },
+      ] },
+    { day: "Next week", cat: "Disclose", title: "A question from your instructor", scene: "Your instructor asks you to explain how you developed the paper.", q: "How do you respond?",
+      opts: [
+        { t: "Share your version history, notes, outline, and any saved AI chats.", r: { A: [2, 1, "Your receipts tell the story. Palomar recommends writing in tools with version history for this reason."], B: [2, 1, "Your receipts show the work was yours."], C: [2, 1, "Your receipts, plus your AI statement, make this an easy conversation."] } },
+        { t: "Say you don’t remember the details.", r: { A: [0, 0, "Without receipts, you can’t show your process. Keep drafts and chats from now on."], B: [0, 0, "Without receipts, you can’t show your process. Keep drafts from now on."], C: [0, 0, "Without receipts, you can’t show your process. Keep drafts and chats from now on."] } },
+        { t: "Quickly write a new draft to prove you can do it.", r: { A: [0, 0, "A new draft isn’t evidence of how you wrote the original. Your saved history is."], B: [0, 0, "A new draft isn’t evidence of how you wrote the original. Your saved history is."], C: [0, 0, "A new draft isn’t evidence of how you wrote the original. Your saved history is."] } },
+      ] },
+  ];
+  const TIPS = { Check: "Before you open any AI tool, find the AI policy in the syllabus and the assignment, or ask your instructor.", Keep: "Use AI as a coach that asks and points out, not a writer that answers for you, and only when the policy allows it.", Verify: "Find every source in a real database, open it, and confirm it says what you claim.", Disclose: "Name the tool, the tasks, and what you did yourself, and keep your drafts and chats as receipts." };
+  let MAX_I = 12, MAX_L = 12;
+  const $ = (id) => document.getElementById(id);
+  const stage = $("stage"), live = $("live");
+  let policy, step, integ, learn, log, answered;
+  const BEST_KEY = "paperTrailBest";
+  function readBest() { try { return parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0; } catch (e) { return 0; } }
+  function writeBest(v) { try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {} }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+  function start(focus) {
+    const keys = Object.keys(POLICIES);
+    policy = POLICIES[keys[Math.floor(Math.random() * keys.length)]];
+    step = 0; integ = 0; learn = 0; log = [];
+    MAX_I = DECISIONS.reduce((a, d) => a + Math.max(...d.opts.map((o) => o.r[policy.key][0])), 0);
+    MAX_L = DECISIONS.reduce((a, d) => a + Math.max(...d.opts.map((o) => o.r[policy.key][1])), 0);
+    $("policyBox").innerHTML = `<p class="eyebrow" style="margin:0">This run’s course AI policy</p><p style="margin:4px 0 0"><strong>${esc(policy.name)}.</strong> ${esc(policy.text)}</p>`;
+    updateMeters(); renderStep(focus);
+    const b = readBest(); $("best").textContent = b ? `Your best percentage on this device: ${b}%.` : "";
+  }
+  function updateMeters() {
+    $("intText").textContent = `${integ} / ${MAX_I}`; $("lrnText").textContent = `${learn} / ${MAX_L}`;
+    $("intBar").style.width = (integ / MAX_I * 100) + "%"; $("lrnBar").style.width = (learn / MAX_L * 100) + "%";
+    $("week").innerHTML = DECISIONS.map((d, i) => `<li class="${i < step ? "done" : i === step ? "now" : ""}"${i === step ? ' aria-current="step"' : ""}>${d.day}</li>`).join("");
+  }
+  function renderStep(focus) {
+    answered = false;
+    const d = DECISIONS[step];
+    const order = shuffle(d.opts.map((_, i) => i));
+    stage.innerHTML = `<span class="tag">${d.cat} · Decision ${step + 1} of ${DECISIONS.length}</span>
+      <h2 id="qh" tabindex="-1">${d.day}: ${esc(d.title)}</h2>
+      <p class="scene">${esc(d.scene)}</p>
+      <form id="f"><fieldset><legend>${esc(d.q)}</legend>
+      ${order.map((oi, n) => `<label class="opt" for="o${oi}"><input type="radio" name="opt" id="o${oi}" value="${oi}"><span><span class="sr">Option ${n + 1}: </span>${esc(d.opts[oi].t)}</span></label>`).join("")}
+      </fieldset><div class="btns"><button type="submit" id="lock" disabled>Make this choice</button></div></form>
+      <div id="fb"></div>`;
+    const f = $("f");
+    f.addEventListener("change", () => { if (!answered) $("lock").disabled = false; });
+    f.addEventListener("submit", (e) => { e.preventDefault(); answer(); });
+    if (focus) $("qh").focus();
+  }
+  function answer() {
+    const sel = stage.querySelector("input[name=opt]:checked");
+    if (!sel || answered) return;
+    answered = true;
+    const d = DECISIONS[step], oi = +sel.value, [di, dl, why] = d.opts[oi].r[policy.key];
+    const bestI = Math.max(...d.opts.map((o) => o.r[policy.key][0])), bestL = Math.max(...d.opts.map((o) => o.r[policy.key][1]));
+    integ += di; learn += dl; log.push({ cat: d.cat, di, dl, maxI: bestI, maxL: bestL });
+    stage.querySelectorAll("input[name=opt]").forEach((i) => (i.disabled = true));
+    $("lock").disabled = true;
+    const cls = di === 2 && dl === bestL ? "good" : di === 0 ? "bad" : "mid";
+    const verdict = cls === "good" ? "✓ Strong choice" : cls === "mid" ? "◐ Partly right" : "✗ Risky choice";
+    const last = step === DECISIONS.length - 1;
+    $("fb").innerHTML = `<div class="feedback ${cls}"><h3 id="fbh" tabindex="-1"><span class="verdict">${verdict}</span></h3><p style="margin:0">${esc(why)}</p>
+      <p class="deltas">Integrity +${di} · Learning +${dl}</p>
+      <div class="btns"><button type="button" id="next">${last ? "See your results" : "Next day"}</button></div></div>`;
+    updateMeters();
+    live.textContent = `${verdict}. Integrity plus ${di}, learning plus ${dl}. ${why}`;
+    $("fbh").focus();
+    $("next").addEventListener("click", () => { step++; if (step >= DECISIONS.length) results(); else { updateMeters(); renderStep(true); } });
+  }
+  function results() {
+    updateMeters();
+    const cats = ["Check", "Keep", "Verify", "Disclose"];
+    const rows = cats.map((c) => { const L = log.filter((x) => x.cat === c); const got = L.reduce((a, x) => a + x.di + x.dl, 0), max = L.reduce((a, x) => a + x.maxI + x.maxL, 0); return { c, got, max, pct: max ? got / max : 1 }; });
+    const weakest = rows.slice().sort((a, b) => a.pct - b.pct)[0];
+    const total = integ + learn, pct = Math.round(total / (MAX_I + MAX_L) * 100), prev = readBest(), best = Math.max(prev, pct);
+    if (pct > prev) writeBest(pct);
+    stage.innerHTML = `<h2 id="rh" tabindex="-1">Your week, scored</h2>
+      <p class="big">${total} of ${MAX_I + MAX_L}</p>
+      <p>Integrity <strong>${integ} of ${MAX_I}</strong> · Learning <strong>${learn} of ${MAX_L}</strong> · Policy: <strong>${esc(policy.name)}</strong></p>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Results by habit"><table><caption>Results by habit</caption>
+      <thead><tr><th scope="col">Habit</th><th scope="col">Points</th><th scope="col">Possible</th></tr></thead>
+      <tbody>${rows.map((r) => `<tr><th scope="row">${r.c}</th><td>${r.got}</td><td>${r.max}</td></tr>`).join("")}</tbody></table></div>
+      <p style="margin-top:14px"><strong>${weakest.pct === 1 ? "No weak spots this run." : "Work on: " + weakest.c + "."}</strong> ${weakest.pct === 1 ? "Try again; you’ll likely get a different policy, and the best moves change." : TIPS[weakest.c]}</p>
+      <p class="small">That’s ${pct}% of the best possible score for this policy. Best on this device: ${best}%.</p>
+      <div class="btns"><button type="button" id="again">Play again with a new policy</button></div>`;
+    $("best").textContent = "";
+    live.textContent = `Finished. ${total} of ${MAX_I + MAX_L}. Weakest habit: ${weakest.c}.`;
+    $("rh").focus();
+    $("again").addEventListener("click", () => start(true));
+  }
+  document.addEventListener("keydown", (e) => {
+    const t = e.target; if (t && (t.tagName === "INPUT" || t.tagName === "BUTTON" || t.tagName === "SELECT" || t.tagName === "TEXTAREA")) return;
+    if (/^[1-3]$/.test(e.key) && !answered) { const ins = stage.querySelectorAll("input[name=opt]"); const i = ins[+e.key - 1]; if (i) { i.checked = true; i.focus(); $("lock").disabled = false; } }
+  });
+  start(false);
+})();
+</script>
